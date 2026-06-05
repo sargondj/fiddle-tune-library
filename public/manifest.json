@@ -1,0 +1,17 @@
+{
+  "name": "Fiddle Tune Library",
+  "short_name": "Fiddle Tunes",
+  "description": "A simple fiddle tune video library for practice.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#5d7052",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

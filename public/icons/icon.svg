@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Fiddle Tune Library icon">
+  <rect width="512" height="512" rx="96" fill="#fff6df"/>
+  <path d="M132 378c72 36 170 34 248-12" fill="none" stroke="#5d7052" stroke-width="26" stroke-linecap="round"/>
+  <path d="M210 117c-34 20-54 57-47 94 5 29 28 52 58 58-32 22-43 61-23 91 21 32 69 38 104 12 30-23 39-61 20-91 34-18 53-55 46-92-8-46-57-78-106-68-19 4-36 12-52 24z" fill="#c85d4f"/>
+  <path d="M297 112l74-44" stroke="#2f342f" stroke-width="18" stroke-linecap="round"/>
+  <path d="M227 187c37 51 43 103 17 157" fill="none" stroke="#2f342f" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="229" cy="190" r="10" fill="#2f342f"/>
+  <circle cx="269" cy="340" r="10" fill="#2f342f"/>
+</svg>
