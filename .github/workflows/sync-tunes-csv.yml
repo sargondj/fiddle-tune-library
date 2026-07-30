@@ -1,0 +1,51 @@
+name: Sync tunes CSV from cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      csv_url:
+        description: "Optional one-time CSV URL. Leave blank to use the TUNES_CSV_URL secret."
+        required: false
+        type: string
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-tunes-csv
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync CSV
+        env:
+          TUNES_CSV_URL: ${{ inputs.csv_url || secrets.TUNES_CSV_URL }}
+        run: npm run sync:csv
+
+      - name: Commit CSV changes
+        run: |
+          if git diff --quiet -- public/data/tunes.csv; then
+            echo "No CSV changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/data/tunes.csv
+            git commit -m "Sync tunes CSV"
+            git push
+          fi

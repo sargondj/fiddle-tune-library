@@ -78,7 +78,7 @@ export function TuneDetail({ tune, initialVideoKey, isFavorite, onBack, onToggle
         <section className="resource-section" aria-labelledby="resource-title">
           <h2 id="resource-title">Sheet music</h2>
           <a className="link-button" href={tune.pdfUrl} target="_blank" rel="noreferrer">
-            PDF of this tune
+            Sheet music for this tune
           </a>
         </section>
       )}
