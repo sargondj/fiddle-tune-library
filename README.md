@@ -67,6 +67,8 @@ It also uploads review files:
 
 If any title parsing looks wrong, edit the new row in the Google Sheet. The `notes` and `pdf_url` columns can be edited there too.
 
+When new rows are added, the workflow also creates a GitHub issue. To get a phone notification, install GitHub Mobile, sign in, and make sure notifications are enabled for this repository's issues.
+
 ## Run Locally
 
 ```bash

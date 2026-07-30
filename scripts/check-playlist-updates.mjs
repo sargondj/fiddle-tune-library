@@ -23,6 +23,7 @@ const playlistJsonPath = args[0];
 const existingCsvPath = resolve(args[1] || 'public/data/tunes.csv');
 const outputCsvPath = resolve(args[2] || 'playlist-review/new-playlist-rows.csv');
 const outputReportPath = resolve(args[3] || 'playlist-review/playlist-report.md');
+const outputResultPath = resolve(args[4] || 'playlist-review/result.json');
 const playlistUrl =
   process.env.LADORE_PLAYLIST_URL ||
   'https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_';
@@ -79,6 +80,7 @@ proposedRows.sort(compareRows);
 
 await mkdir(dirname(outputCsvPath), { recursive: true });
 await mkdir(dirname(outputReportPath), { recursive: true });
+await mkdir(dirname(outputResultPath), { recursive: true });
 await writeFile(outputCsvPath, `${Papa.unparse(proposedRows, { columns: headers })}\n`, 'utf8');
 await writeFile(outputReportPath, buildReport(proposedRows), 'utf8');
 
@@ -89,20 +91,19 @@ if (appendToSheet && proposedRows.length > 0) {
   await writeFile(outputReportPath, buildReport(proposedRows, appendedRows), 'utf8');
 }
 
-console.log(
-  JSON.stringify(
-    {
-      playlist_entries_checked: playlistEntries.length,
-      existing_video_ids: existingVideoIds.size,
-      proposed_rows: proposedRows.length,
-      appended_rows: appendedRows,
-      output_csv: outputCsvPath,
-      output_report: outputReportPath,
-    },
-    null,
-    2,
-  ),
-);
+const result = {
+  playlist_entries_checked: playlistEntries.length,
+  existing_video_ids: existingVideoIds.size,
+  proposed_rows: proposedRows.length,
+  appended_rows: appendedRows,
+  output_csv: outputCsvPath,
+  output_report: outputReportPath,
+  output_result: outputResultPath,
+};
+
+await writeFile(outputResultPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+
+console.log(JSON.stringify(result, null, 2));
 
 function parseTitle(rawTitle) {
   let title = normalizeWhitespace(rawTitle);
