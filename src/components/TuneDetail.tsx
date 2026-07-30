@@ -74,6 +74,15 @@ export function TuneDetail({ tune, initialVideoKey, isFavorite, onBack, onToggle
 
       {selectedVideo ? <YouTubePlayer video={selectedVideo} /> : <p className="notice">Video link coming soon.</p>}
 
+      {tune.pdfUrl && (
+        <section className="resource-section" aria-labelledby="resource-title">
+          <h2 id="resource-title">Sheet music</h2>
+          <a className="link-button" href={tune.pdfUrl} target="_blank" rel="noreferrer">
+            PDF of this tune
+          </a>
+        </section>
+      )}
+
       {tune.notes.length > 0 && (
         <section className="notes-section" aria-labelledby="notes-title">
           <h2 id="notes-title">Notes</h2>

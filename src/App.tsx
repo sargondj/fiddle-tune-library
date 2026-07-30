@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TuneDetail } from './components/TuneDetail';
 import { TuneLibrary } from './components/TuneLibrary';
+import { WelcomeDialog } from './components/WelcomeDialog';
 import { groupTunes, parseCsv, type Tune, type TuneVideo } from './lib/tunes';
 import { loadFavorites, saveFavorites } from './lib/favorites';
 
@@ -15,6 +16,7 @@ export default function App() {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,6 +74,8 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      {showWelcome && <WelcomeDialog onClose={() => setShowWelcome(false)} />}
+
       {selection && selectedTune ? (
         <TuneDetail
           tune={selectedTune}

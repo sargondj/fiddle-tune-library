@@ -13,10 +13,12 @@ public/data/tunes.csv
 The CSV should use these columns:
 
 ```text
-tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes
+tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes,pdf_url
 ```
 
 The app loads and parses this file in the browser. There is no backend, database, login, payment system, or server API.
+
+`pdf_url` is optional. When a row includes a valid `http` or `https` PDF link, the tune detail page shows a `PDF of this tune` button. Tunes without a PDF link simply skip that section.
 
 ## Run Locally
 
