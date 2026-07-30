@@ -8,13 +8,15 @@ on:
         required: false
         type: string
   schedule:
-    - cron: "17 * * * *"
+    - cron: "*/15 * * * *"
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: sync-tunes-csv
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -49,3 +51,18 @@ jobs:
             git commit -m "Sync tunes CSV"
             git push
           fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

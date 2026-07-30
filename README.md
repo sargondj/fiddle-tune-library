@@ -32,7 +32,13 @@ The easiest editing workflow is to keep the tune list in Google Sheets, then let
 6. In GitHub, open this repository and go to **Settings > Secrets and variables > Actions**.
 7. Create a repository secret named `TUNES_CSV_URL` and paste the Google Sheets CSV URL as the value.
 
-After that, the workflow at `.github/workflows/sync-tunes-csv.yml` can update the app data from the cloud sheet. It runs hourly, and it can also be run manually from **Actions > Sync tunes CSV from cloud > Run workflow**. If the CSV changes, GitHub commits the new `public/data/tunes.csv`, which then triggers the normal GitHub Pages deployment.
+For the current tune sheet, use this URL:
+
+```text
+https://docs.google.com/spreadsheets/d/1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU/gviz/tq?tqx=out:csv&gid=0
+```
+
+After that, the workflow at `.github/workflows/sync-tunes-csv.yml` can update the app data from the cloud sheet. It checks for updates every 15 minutes, and it can also be run manually from **Actions > Sync tunes CSV from cloud > Run workflow**. The workflow downloads the cloud CSV, commits any changes to `public/data/tunes.csv`, builds the app, and deploys it to GitHub Pages.
 
 You can test the same sync locally with:
 
