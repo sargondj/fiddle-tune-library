@@ -6,7 +6,13 @@ on:
     - cron: "43 10 */3 * *"
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -36,12 +42,49 @@ jobs:
 
       - name: Check for new videos
         env:
+          APPEND_NEW_PLAYLIST_ROWS: "true"
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEET_ID: "1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU"
+          GOOGLE_SHEET_RANGE: "A:J"
           LADORE_PLAYLIST_URL: "https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_"
           LADORE_PLAYLIST_LABEL: "L'Adore Studio playlist"
           LADORE_CHANNEL_LABEL: "L'Adore Studio"
-        run: npm run check:playlist -- playlist-review/playlist.json
+        run: npm run check:playlist -- playlist-review/playlist.json --append-to-sheet
+
+      - name: Sync CSV from Google Sheet
+        env:
+          TUNES_CSV_URL: ${{ secrets.TUNES_CSV_URL }}
+        run: npm run sync:csv
+
+      - name: Commit CSV changes
+        run: |
+          if git diff --quiet -- public/data/tunes.csv; then
+            echo "No CSV changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/data/tunes.csv
+            git commit -m "Sync L'Adore playlist tunes"
+            git push
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Upload review files
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ladore-playlist-review

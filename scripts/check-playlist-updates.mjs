@@ -1,3 +1,4 @@
+import { createSign } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import Papa from 'papaparse';
@@ -15,33 +16,32 @@ const headers = [
   'pdf_url',
 ];
 
-const playlistJsonPath = process.argv[2];
-const existingCsvPath = resolve(process.argv[3] || 'public/data/tunes.csv');
-const outputCsvPath = resolve(process.argv[4] || 'playlist-review/new-playlist-rows.csv');
-const outputReportPath = resolve(process.argv[5] || 'playlist-review/playlist-report.md');
+const appendToSheet =
+  process.argv.includes('--append-to-sheet') || process.env.APPEND_NEW_PLAYLIST_ROWS === 'true';
+const args = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+const playlistJsonPath = args[0];
+const existingCsvPath = resolve(args[1] || 'public/data/tunes.csv');
+const outputCsvPath = resolve(args[2] || 'playlist-review/new-playlist-rows.csv');
+const outputReportPath = resolve(args[3] || 'playlist-review/playlist-report.md');
 const playlistUrl =
   process.env.LADORE_PLAYLIST_URL ||
   'https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_';
 const playlistLabel = process.env.LADORE_PLAYLIST_LABEL || "L'Adore Studio playlist";
 const channelLabel = process.env.LADORE_CHANNEL_LABEL || "L'Adore Studio";
+const spreadsheetId =
+  process.env.GOOGLE_SHEET_ID || '1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU';
+const sheetRange = process.env.GOOGLE_SHEET_RANGE || 'A:J';
 
 if (!playlistJsonPath) {
   console.error('Usage: node scripts/check-playlist-updates.mjs <playlist.json> [existing.csv]');
   process.exit(1);
 }
 
-const [playlistJson, existingCsv] = await Promise.all([
-  readFile(playlistJsonPath, 'utf8'),
-  readFile(existingCsvPath, 'utf8'),
-]);
+const playlistJson = await readFile(playlistJsonPath, 'utf8');
 
 const playlist = JSON.parse(playlistJson);
 const playlistEntries = Array.isArray(playlist.entries) ? playlist.entries : [];
-const existingRows = Papa.parse(existingCsv, {
-  header: true,
-  skipEmptyLines: true,
-  transformHeader: (header) => header.trim(),
-}).data;
+const existingRows = appendToSheet ? await readGoogleSheetRows() : await readCsvRows(existingCsvPath);
 
 const existingVideoIds = new Set(
   existingRows.map((row) => clean(row.youtube_id)).filter(Boolean),
@@ -82,12 +82,20 @@ await mkdir(dirname(outputReportPath), { recursive: true });
 await writeFile(outputCsvPath, `${Papa.unparse(proposedRows, { columns: headers })}\n`, 'utf8');
 await writeFile(outputReportPath, buildReport(proposedRows), 'utf8');
 
+let appendedRows = 0;
+
+if (appendToSheet && proposedRows.length > 0) {
+  appendedRows = await appendRowsToGoogleSheet(proposedRows);
+  await writeFile(outputReportPath, buildReport(proposedRows, appendedRows), 'utf8');
+}
+
 console.log(
   JSON.stringify(
     {
       playlist_entries_checked: playlistEntries.length,
       existing_video_ids: existingVideoIds.size,
       proposed_rows: proposedRows.length,
+      appended_rows: appendedRows,
       output_csv: outputCsvPath,
       output_report: outputReportPath,
     },
@@ -188,7 +196,108 @@ function buildNotes({ sourceTitle, playlistTitle, channel, duration }) {
   return parts.join(' | ');
 }
 
-function buildReport(rows) {
+async function readCsvRows(csvPath) {
+  const existingCsv = await readFile(csvPath, 'utf8');
+  return Papa.parse(existingCsv, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (header) => header.trim(),
+  }).data;
+}
+
+async function readGoogleSheetRows() {
+  const accessToken = await getGoogleAccessToken();
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetRange)}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not read Google Sheet: ${response.status} ${await response.text()}`);
+  }
+
+  const payload = await response.json();
+  const values = Array.isArray(payload.values) ? payload.values : [];
+  const [headerRow = [], ...dataRows] = values;
+  const normalizedHeaders = headerRow.map((header) => clean(header));
+
+  return dataRows.map((row) =>
+    Object.fromEntries(normalizedHeaders.map((header, index) => [header, clean(row[index])])),
+  );
+}
+
+async function appendRowsToGoogleSheet(rows) {
+  const accessToken = await getGoogleAccessToken();
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+    sheetRange,
+  )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: rows.map((row) => headers.map((header) => row[header] ?? '')),
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not append to Google Sheet: ${response.status} ${await response.text()}`);
+  }
+
+  const payload = await response.json();
+  return payload.updates?.updatedRows ?? rows.length;
+}
+
+async function getGoogleAccessToken() {
+  const rawCredentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+
+  if (!rawCredentials) {
+    throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_JSON secret.');
+  }
+
+  const credentials = JSON.parse(rawCredentials);
+  const tokenUrl = 'https://oauth2.googleapis.com/token';
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const expiresAt = issuedAt + 3600;
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const claimSet = {
+    iss: credentials.client_email,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    aud: tokenUrl,
+    exp: expiresAt,
+    iat: issuedAt,
+  };
+  const unsignedToken = `${base64Url(JSON.stringify(header))}.${base64Url(JSON.stringify(claimSet))}`;
+  const signer = createSign('RSA-SHA256');
+  signer.update(unsignedToken);
+  const signature = signer.sign(credentials.private_key, 'base64url');
+  const assertion = `${unsignedToken}.${signature}`;
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not get Google access token: ${response.status} ${await response.text()}`);
+  }
+
+  const payload = await response.json();
+  return payload.access_token;
+}
+
+function buildReport(rows, appendedRows = 0) {
   if (rows.length === 0) {
     return [
       '# Playlist Check',
@@ -207,7 +316,9 @@ function buildReport(rows) {
     '| --- | --- | --- |',
     ...rows.map((row) => `| ${escapeMarkdown(row.tune_name)} | ${escapeMarkdown(row.identified_speed)} | ${row.video_url} |`),
     '',
-    'Review these rows before adding them to the Google Sheet.',
+    appendedRows > 0
+      ? `${appendedRows} row${appendedRows === 1 ? '' : 's'} appended to the Google Sheet.`
+      : 'These rows were generated for review but were not appended to the Google Sheet.',
     '',
   ].join('\n');
 }
@@ -253,4 +364,8 @@ function clean(value) {
 
 function escapeMarkdown(value) {
   return String(value ?? '').replace(/\|/g, '\\|');
+}
+
+function base64Url(value) {
+  return Buffer.from(value).toString('base64url');
 }

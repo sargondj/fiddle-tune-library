@@ -56,12 +56,16 @@ Current playlist:
 https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_
 ```
 
-It runs every three days, and it can also be run manually from **Actions > Check L'Adore playlist for new tunes > Run workflow**. The workflow does not edit the Google Sheet directly. Instead, it uploads review files:
+It runs every three days, and it can also be run manually from **Actions > Check L'Adore playlist for new tunes > Run workflow**. When it finds new videos, it appends new rows to the Google Sheet, syncs `public/data/tunes.csv`, builds the app, and deploys it to GitHub Pages.
+
+This workflow needs a Google service account that can edit the sheet. Create a repository secret named `GOOGLE_SERVICE_ACCOUNT_JSON` containing the service account JSON, then share the Google Sheet with the service account's `client_email` address as an editor.
+
+It also uploads review files:
 
 - `playlist-report.md`
 - `new-playlist-rows.csv`
 
-Review the proposed rows, then add any correct rows to the Google Sheet. The normal CSV sync workflow will publish them to the app.
+If any title parsing looks wrong, edit the new row in the Google Sheet. The `notes` and `pdf_url` columns can be edited there too.
 
 ## Run Locally
 
