@@ -1,0 +1,48 @@
+name: Check L'Adore playlist for new tunes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "43 10 */3 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install yt-dlp
+        run: python -m pip install --upgrade yt-dlp
+
+      - name: Download playlist metadata
+        env:
+          LADORE_PLAYLIST_URL: "https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_"
+        run: |
+          mkdir -p playlist-review
+          yt-dlp --no-update --flat-playlist --dump-single-json "$LADORE_PLAYLIST_URL" > playlist-review/playlist.json
+
+      - name: Check for new videos
+        env:
+          LADORE_PLAYLIST_URL: "https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_"
+          LADORE_PLAYLIST_LABEL: "L'Adore Studio playlist"
+          LADORE_CHANNEL_LABEL: "L'Adore Studio"
+        run: npm run check:playlist -- playlist-review/playlist.json
+
+      - name: Upload review files
+        uses: actions/upload-artifact@v4
+        with:
+          name: ladore-playlist-review
+          path: playlist-review/

@@ -38,13 +38,30 @@ For the current tune sheet, use this URL:
 https://docs.google.com/spreadsheets/d/1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU/gviz/tq?tqx=out:csv&gid=0
 ```
 
-After that, the workflow at `.github/workflows/sync-tunes-csv.yml` can update the app data from the cloud sheet. It checks for updates every 15 minutes, and it can also be run manually from **Actions > Sync tunes CSV from cloud > Run workflow**. The workflow downloads the cloud CSV, commits any changes to `public/data/tunes.csv`, builds the app, and deploys it to GitHub Pages.
+After that, the workflow at `.github/workflows/sync-tunes-csv.yml` can update the app data from the cloud sheet. It checks for updates once daily, and it can also be run manually from **Actions > Sync tunes CSV from cloud > Run workflow**. The workflow downloads the cloud CSV, commits any changes to `public/data/tunes.csv`, builds the app, and deploys it to GitHub Pages.
 
 You can test the same sync locally with:
 
 ```bash
 TUNES_CSV_URL="https://example.com/tunes.csv" npm run sync:csv
 ```
+
+## Playlist Checks
+
+The workflow at `.github/workflows/check-ladore-playlist.yml` checks the L'Adore Studio playlist for YouTube videos that are not already listed in `public/data/tunes.csv`.
+
+Current playlist:
+
+```text
+https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_
+```
+
+It runs every three days, and it can also be run manually from **Actions > Check L'Adore playlist for new tunes > Run workflow**. The workflow does not edit the Google Sheet directly. Instead, it uploads review files:
+
+- `playlist-report.md`
+- `new-playlist-rows.csv`
+
+Review the proposed rows, then add any correct rows to the Google Sheet. The normal CSV sync workflow will publish them to the app.
 
 ## Run Locally
 
