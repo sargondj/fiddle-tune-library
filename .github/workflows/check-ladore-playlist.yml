@@ -113,7 +113,7 @@ jobs:
               repo: context.repo.repo,
               title: `New L'Adore tune rows added: ${result.appended_rows}`,
               body: [
-                'The L\\'Adore playlist automation added new row(s) to the Google Sheet and redeployed the app.',
+                "The L'Adore playlist automation added new row(s) to the Google Sheet and redeployed the app.",
                 '',
                 report,
                 '',
