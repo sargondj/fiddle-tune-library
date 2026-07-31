@@ -13,6 +13,7 @@ export type TuneRow = {
   extraction_status?: string;
   notes?: string;
   pdf_url?: string;
+  event_filters?: string;
   rowIndex: number;
 };
 
@@ -34,6 +35,7 @@ export type Tune = {
   videos: TuneVideo[];
   notes: string[];
   pdfUrl: string;
+  eventFilters: string[];
 };
 
 const speedOrder: Record<SpeedGroup, number> = {
@@ -67,6 +69,7 @@ export function parseCsv(csv: string): TuneRow[] {
       extraction_status: clean(row.extraction_status),
       notes: clean(row.notes),
       pdf_url: clean(row.pdf_url),
+      event_filters: clean(row.event_filters),
       rowIndex: index,
     }));
 }
@@ -80,7 +83,7 @@ export function groupTunes(rows: TuneRow[]): Tune[] {
     const id = clean(row.tune_id) || slugify(name);
 
     if (!grouped.has(id)) {
-      grouped.set(id, { id, name, videos: [], notes: [], pdfUrl: '' });
+      grouped.set(id, { id, name, videos: [], notes: [], pdfUrl: '', eventFilters: [] });
       seenVideoIdsByTune.set(id, new Set());
     }
 
@@ -105,6 +108,12 @@ export function groupTunes(rows: TuneRow[]): Tune[] {
     if (!tune.pdfUrl && isUsableUrl(row.pdf_url)) {
       tune.pdfUrl = clean(row.pdf_url);
     }
+
+    parseEventFilters(row.event_filters).forEach((filter) => {
+      if (!tune.eventFilters.includes(filter)) {
+        tune.eventFilters.push(filter);
+      }
+    });
 
     tune.videos.push({
       key: `${id}-${row.rowIndex}`,
@@ -232,4 +241,11 @@ function isUsableUrl(url?: string): boolean {
   } catch {
     return false;
   }
+}
+
+function parseEventFilters(value?: string): string[] {
+  return clean(value)
+    .split(/[;|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }

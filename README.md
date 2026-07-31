@@ -13,12 +13,22 @@ public/data/tunes.csv
 The CSV should use these columns:
 
 ```text
-tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes,pdf_url
+tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes,pdf_url,event_filters
 ```
 
 The app loads and parses this file in the browser. There is no backend, database, login system, payment system, or server API.
 
 `pdf_url` is optional. When a row includes a valid `http` or `https` PDF link, the tune detail page shows a `Sheet music for this tune` button. Tunes without a PDF link simply skip that section.
+
+`event_filters` is optional. Use it to place a tune in one or more practice-list buttons near the top of the app. Leave it blank for ordinary tunes. For multiple buttons, separate labels with semicolons:
+
+```text
+Winter Concert; Advanced Group
+```
+
+If any row for a tune has `event_filters`, the whole tune appears when that button is selected.
+
+In the Google Sheet, add `event_filters` as the header in column K. Most rows can stay blank.
 
 ## Cloud CSV Updates
 

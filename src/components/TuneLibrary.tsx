@@ -23,6 +23,15 @@ export function TuneLibrary({
 }: Props) {
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<SpeedFilter>('All');
+  const [selectedEventFilter, setSelectedEventFilter] = useState('');
+
+  const eventFilters = useMemo(
+    () =>
+      Array.from(new Set(tunes.flatMap((tune) => tune.eventFilters))).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' }),
+      ),
+    [tunes],
+  );
 
   const filteredTunes = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
@@ -31,9 +40,11 @@ export function TuneLibrary({
       const matchesSearch = tune.name.toLowerCase().includes(searchValue);
       const matchesFilter =
         selectedFilter === 'All' || tune.videos.some((video) => video.speedGroup === selectedFilter);
-      return matchesSearch && matchesFilter;
+      const matchesEventFilter =
+        selectedEventFilter === '' || tune.eventFilters.includes(selectedEventFilter);
+      return matchesSearch && matchesFilter && matchesEventFilter;
     });
-  }, [search, selectedFilter, tunes]);
+  }, [search, selectedEventFilter, selectedFilter, tunes]);
 
   return (
     <>
@@ -46,8 +57,11 @@ export function TuneLibrary({
       <SearchAndFilters
         search={search}
         selectedFilter={selectedFilter}
+        eventFilters={eventFilters}
+        selectedEventFilter={selectedEventFilter}
         onSearchChange={setSearch}
         onFilterChange={setSelectedFilter}
+        onEventFilterChange={setSelectedEventFilter}
       />
 
       {loadError ? (

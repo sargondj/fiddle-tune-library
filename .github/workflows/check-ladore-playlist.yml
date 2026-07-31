@@ -46,7 +46,7 @@ jobs:
           APPEND_NEW_PLAYLIST_ROWS: "true"
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_SHEET_ID: "1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU"
-          GOOGLE_SHEET_RANGE: "A:J"
+          GOOGLE_SHEET_RANGE: "A:K"
           LADORE_PLAYLIST_URL: "https://www.youtube.com/watch?v=YdekZGR-qLA&list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_"
           LADORE_PLAYLIST_LABEL: "L'Adore Studio playlist"
           LADORE_CHANNEL_LABEL: "L'Adore Studio"

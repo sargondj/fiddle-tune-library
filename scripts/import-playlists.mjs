@@ -11,6 +11,8 @@ const headers = [
   'source_link_label',
   'extraction_status',
   'notes',
+  'pdf_url',
+  'event_filters',
 ];
 
 const inputFiles = process.argv.slice(2);
@@ -49,6 +51,8 @@ const sourceRows = inputFiles.flatMap((filePath) => {
         source_link_label: `${playlistTitle} #${index + 1}`,
         extraction_status: 'extracted',
         notes,
+        pdf_url: '',
+        event_filters: '',
       }));
     });
 });

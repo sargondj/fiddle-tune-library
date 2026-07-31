@@ -15,7 +15,8 @@ const requiredColumns = [
 ];
 
 const optionalColumns = ['pdf_url'];
-const outputColumns = [...requiredColumns, ...optionalColumns];
+const optionalEventColumns = ['event_filters'];
+const outputColumns = [...requiredColumns, ...optionalColumns, ...optionalEventColumns];
 const csvUrl = process.argv[2] || process.env.TUNES_CSV_URL;
 const outputPath = resolve('public/data/tunes.csv');
 

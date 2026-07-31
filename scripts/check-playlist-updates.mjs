@@ -14,6 +14,7 @@ const headers = [
   'extraction_status',
   'notes',
   'pdf_url',
+  'event_filters',
 ];
 
 const appendToSheet =
@@ -31,7 +32,7 @@ const playlistLabel = process.env.LADORE_PLAYLIST_LABEL || "L'Adore Studio playl
 const channelLabel = process.env.LADORE_CHANNEL_LABEL || "L'Adore Studio";
 const spreadsheetId =
   process.env.GOOGLE_SHEET_ID || '1t_dUenBfRTj_GyuefRiuSiowpt4i3DcdObk2UF-QTwU';
-const sheetRange = process.env.GOOGLE_SHEET_RANGE || 'A:J';
+const sheetRange = process.env.GOOGLE_SHEET_RANGE || 'A:K';
 
 if (!playlistJsonPath) {
   console.error('Usage: node scripts/check-playlist-updates.mjs <playlist.json> [existing.csv]');
@@ -73,6 +74,7 @@ const proposedRows = playlistEntries
       extraction_status: 'needs_review',
       notes,
       pdf_url: '',
+      event_filters: '',
     }));
   });
 

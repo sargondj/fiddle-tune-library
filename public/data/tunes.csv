@@ -1,4 +1,4 @@
-tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes,pdf_url
+tune_id,tune_name,identified_speed,video_url,youtube_id,source_page,source_link_label,extraction_status,notes,pdf_url,event_filters
 69th-street,69th Street,Slow,https://www.youtube.com/watch?v=nTQ8gJEqrfo,nTQ8gJEqrfo,https://www.youtube.com/playlist?list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_,Fiddle Tunes 1 #31,extracted,Source title: 69th Street - slow | Playlist: Fiddle Tunes 1 | Channel: Sarah Foard | Duration: 0:56,https://www.google.com
 69th-street,69th Street,Fast,https://www.youtube.com/watch?v=jNr6AqAgljs,jNr6AqAgljs,https://www.youtube.com/playlist?list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_,Fiddle Tunes 1 #30,extracted,Source title: 69th Street - fast | Playlist: Fiddle Tunes 1 | Channel: Sarah Foard | Duration: 1:21,
 abbots-bromley-horn-dance,Abbots Bromley Horn Dance,Other,https://www.youtube.com/watch?v=Y1lWJx9tOWY,Y1lWJx9tOWY,https://www.youtube.com/playlist?list=PLcV6BAqX_YFflBxey-VwMv2tEPKjIDFK_,Fiddle Tunes 1 #55,extracted,Source title: Abbots Bromley Horn Dance | Playlist: Fiddle Tunes 1 | Channel: Sarah Foard | Duration: 1:44,
