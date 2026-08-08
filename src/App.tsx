@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TuneDetail } from './components/TuneDetail';
 import { TuneLibrary } from './components/TuneLibrary';
 import { WelcomeDialog } from './components/WelcomeDialog';
@@ -10,6 +10,16 @@ type Selection = {
   videoKey?: string;
 };
 
+const REFRESH_AFTER_MS = 5 * 60 * 1000;
+
+function tunesCsvUrl() {
+  const baseUrl = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`;
+
+  return `${baseUrl}data/tunes.csv?refresh=${Date.now()}`;
+}
+
 export default function App() {
   const [tunes, setTunes] = useState<Tune[]>([]);
   const [favorites, setFavorites] = useState<string[]>(() => loadFavorites());
@@ -17,38 +27,66 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const lastLoadedAt = useRef(0);
+
+  const loadTunes = useCallback(async (signal?: AbortSignal, showLoading = false) => {
+    if (showLoading) {
+      setIsLoading(true);
+    }
+
+    try {
+      const response = await fetch(tunesCsvUrl(), {
+        cache: 'no-store',
+        signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Could not load CSV: ${response.status}`);
+      }
+
+      const csv = await response.text();
+      setTunes(groupTunes(parseCsv(csv)));
+      setLoadError(false);
+      lastLoadedAt.current = Date.now();
+    } catch (error) {
+      if (!signal?.aborted) {
+        console.error(error);
+        if (showLoading) {
+          setLoadError(true);
+        }
+      }
+    } finally {
+      if (!signal?.aborted && showLoading) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadTunes() {
-      try {
-        const response = await fetch(`${import.meta.env.BASE_URL}data/tunes.csv`, {
-          signal: controller.signal,
-        });
+    loadTunes(controller.signal, true);
 
-        if (!response.ok) {
-          throw new Error(`Could not load CSV: ${response.status}`);
-        }
+    return () => controller.abort();
+  }, [loadTunes]);
 
-        const csv = await response.text();
-        setTunes(groupTunes(parseCsv(csv)));
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error(error);
-          setLoadError(true);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+  useEffect(() => {
+    function refreshIfStale() {
+      const hasStaleData = Date.now() - lastLoadedAt.current > REFRESH_AFTER_MS;
+
+      if (document.visibilityState === 'visible' && hasStaleData) {
+        void loadTunes();
       }
     }
 
-    loadTunes();
+    document.addEventListener('visibilitychange', refreshIfStale);
+    window.addEventListener('focus', refreshIfStale);
 
-    return () => controller.abort();
-  }, []);
+    return () => {
+      document.removeEventListener('visibilitychange', refreshIfStale);
+      window.removeEventListener('focus', refreshIfStale);
+    };
+  }, [loadTunes]);
 
   useEffect(() => {
     saveFavorites(favorites);
